@@ -1,7 +1,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 typedef uint16_t u16;
+u16 mem[UINT16_MAX+1];
 u16 in()
 {
 	int ch = fgetc(stdin);

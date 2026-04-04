@@ -25,8 +25,8 @@ int main(void)
 	// scratch
 
 	u16 _ch = _0;
-	u16 _i = _0;
-	u16 _j = _0;
+	u16 _addr_ch = _0;
+	u16 _counter = _0;
 
 	// globals
 
@@ -42,21 +42,21 @@ _read_file:
 	if (_file_size >= _FILE_SIZE_SUP)
 		goto _halt_failure;
 
-	_i = _ADDR_MOST;
-	_i -= _file_size;
-	mem[_i] = _ch;
+	_addr_ch = _ADDR_MOST;
+	_addr_ch -= _file_size;
+	mem[_addr_ch] = _ch;
 	
 	_file_size += _1;
 	goto _read_file;
 
 _scrub_ascii:
-	_i = _0;
-	_j = _ADDR_MOST;
+	_counter = _0;
+	_addr_ch = _ADDR_MOST;
 _scrub_ascii_loop:
-	if (_i == _file_size)
+	if (_counter == _file_size)
 		goto _write_file;
 
-	_ch = mem[_j];
+	_ch = mem[_addr_ch];
 	if (_ch < _ch_tab)
 		goto _bad_ch;
 	if (_ch == _ch_tab)
@@ -75,23 +75,23 @@ _scrub_ascii_loop:
 	goto _bad_ch;
 
 _good_ch_ascii:
-	_j -= _1;
-	_i += _1;
+	_addr_ch -= _1;
+	_counter += _1;
 	goto _scrub_ascii_loop;
 
 _bad_ch:
 	goto _halt_failure;
 
 _write_file:
-	_i = _0;
-	_j = _ADDR_MOST;
+	_counter = _0;
+	_addr_ch = _ADDR_MOST;
 _write_file_loop:
-	if (_i == _file_size)
+	if (_counter == _file_size)
 		goto _halt_success;
 
-	out(mem[_j]);
-	_j -= _1;
-	_i += _1;
+	out(mem[_addr_ch]);
+	_addr_ch -= _1;
+	_counter += _1;
 	goto _write_file_loop;
 
 //  --- spin loops ---

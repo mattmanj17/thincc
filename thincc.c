@@ -2,42 +2,24 @@
 #include "thincc.h"
 int main(void)
 {
-	// hello world\n
-
-	// h
-	out(0x0068);
-
-	// e
-	out(0x0065);
-
-	// ll
-	out(0x006C);
-	out(0x006C);
-
-	// o
-	out(0x006F);
-
-	// ' '
-	out(0x0020);
-
-	// w
-	out(0x0077);
-
-	// o
-	out(0x006F);
-
-	// r
-	out(0x0072);
-
-	// l
-	out(0x006C);
-
-	// d
-	out(0x0064);
-
-	// \n
-	out(0x000A);
-
-	// done
-	return 0;
+	u16 _in = 0x0000;
+_loop:
+	_in = in();
+	// _in == eof?
+	if (_in == 0xFFFF) 
+		goto _halt;
+	// > z ?
+	if (_in > 0x007A) 
+		goto _out;
+	// < a ?
+	if (_in < 0x0061) 
+		goto _out;
+	// to upper
+	_in -= 0x0061;
+	_in += 0x0041;
+_out:
+	out(_in);
+	goto _loop;
+_halt:
+	goto _halt;
 }

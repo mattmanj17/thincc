@@ -4,80 +4,115 @@
 #include "thincc.h"
 
 enum fn {
-	fn_read_file,
-	
-	fn_write_file,
-	fn_write_file_loop,
+	fn_start,
+	fn_fill_file_buffer,
+	fn_print_file_buffer,
+	fn_print_span,
 };
 
 DEF(d_0, 0x0000);
 DEF(d_1, 0x0001);
 
-DEF(d_rc_exit, M_RC_EXIT);
-DEF(d_rc_abort, M_RC_ABORT);
+DEF(d_c_ch_file_size_max,		0x8000);
+DEF(d_ptr_last,					0xFFFF);
 
-DEF(d_mem_most, 0xFFFF);
-DEF(d_eof, 0xFFFF);
-DEF(d_file_size_most, 0x8000);
+// d_ptr_last - d_c_ch_file_size_max + 1
+DEF(d_ch_ptr_file_buffer_start, 0x8000);
 
 // global argument registers
 u16 g_arg_0 = d_0;
 u16 g_arg_1 = d_0;
-u16 g_arg_2 = d_0;
 
 u16 step(u16 fn) {
 BRANCH(fn);
 
-	// fn_read_file
-	CASE(fn_read_file);
-		u16 v_file_size = g_arg_0;
-		u16 v_x = 0x0000;
-		u16 v_y = 0x0000;
+	// void start();
+	CASE(fn_start);
+		// fill_file_buffer(0);
+		g_arg_0 = d_0;
+		return fn_fill_file_buffer;
+	END;
+
+	// void fill_file_buffer(u16 c_ch_file_size_cur);
+	CASE(fn_fill_file_buffer);
+		u16 v_c_ch_file_size_cur = g_arg_0;
+		u16 v_ch = d_0;
+		u16 v_ch_ptr = d_ch_ptr_file_buffer_start;
 		
-		v_x = in();
-		if (v_x == d_eof) {
-			return fn_write_file;
+		// read
+		v_ch = in();
+		if (v_ch == M_EOF) {
+			// NOTE v_file_size is sitting in g_arg_0
+			return fn_print_file_buffer;
 		}
 
-		if (v_file_size >= d_file_size_most) {
-			return d_rc_abort;
+		// buffer exhasted
+		if (v_c_ch_file_size_cur >= d_c_ch_file_size_max) {
+			return M_RC_ABORT;
 		}
 
-		v_y = d_mem_most;
-		v_y -= v_file_size;
-		mem[v_y] = v_x;
-	
-		v_file_size += d_1;
-		g_arg_0 = v_file_size;
-		return fn_read_file;
+		// store
+		v_ch_ptr += v_c_ch_file_size_cur;
+		mem[v_ch_ptr] = v_ch;
+		v_c_ch_file_size_cur += d_1;
+
+		// recurse
+		g_arg_0 = v_c_ch_file_size_cur;
+		return fn_fill_file_buffer;
 	END;
 
-	// fn_write_file
-	CASE(fn_write_file);
-		g_arg_1 = d_0;
-		g_arg_2 = d_mem_most;
-		return fn_write_file_loop;
-	END;
-	CASE(fn_write_file_loop);
-		u16 v_file_size = g_arg_0;	
-		u16 v_i = g_arg_1;
-		u16 v_j = g_arg_2;
-
-		if (v_i == v_file_size){
-			return d_rc_exit;
+	// void print_file_buffer(u16 c_ch_print);
+	CASE(fn_print_file_buffer);
+		
+		// exit if not supposed to print any ch's
+		if (g_arg_0 == d_0) {
+			return M_RC_EXIT;
 		}
 
-		out(mem[v_j]);
-		v_i += d_1;
-		v_j -= d_1;
-		g_arg_1 = v_i;
-		g_arg_2 = v_j;
-		return fn_write_file_loop;
+		// turn v_file_size into ch_ptr_last
+		// NOTE we must dec by 1 to get the "last" ptr
+		g_arg_0 -= d_1;
+		g_arg_0 += d_ch_ptr_file_buffer_start;
+		
+		// move to ch_ptr_last
+		g_arg_1 = g_arg_0;
+		
+		// ch_ptr_first = file_buffer_start
+		g_arg_0 = d_ch_ptr_file_buffer_start;
+		
+		// call print_span
+		return fn_print_span;
+	END;
+
+	// void print_span(u16 ch_ptr_first, u16 ch_ptr_last);
+	CASE(fn_print_span);
+		u16 v_ch_ptr_first = g_arg_0;	
+		u16 v_ch_ptr_last = g_arg_1;
+
+		if (v_ch_ptr_first > v_ch_ptr_last) {
+			// done printing
+			return M_RC_EXIT;
+		}
+
+		// print
+		out(mem[v_ch_ptr_first]);
+		
+		// handle case where v_ch_ptr_last is the end of mem
+		if (v_ch_ptr_first == d_ptr_last) {
+			return M_RC_EXIT;
+		}
+
+		// inc
+		v_ch_ptr_first += d_1;
+
+		// recurse
+		g_arg_0 = v_ch_ptr_first;
+		return fn_print_span;
 	END;
 
 	// unknown function?
 	DEFAULT;
-		return d_rc_abort;
+		return M_RC_ABORT;
 	END;
 CUT;
 }

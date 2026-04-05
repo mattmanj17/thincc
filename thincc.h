@@ -17,6 +17,7 @@ u16 mem[65536];
 // call step() until it returns a sentinel.
 #define M_RC_EXIT	((u16)0xFFFF)
 #define M_RC_ABORT	((u16)0xFFFE)
+#define M_EOF		((u16)0xFFFF)
 u16 step(u16 fn);
 int main(void)
 {

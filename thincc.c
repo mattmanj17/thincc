@@ -89,7 +89,7 @@ _scrub_ascii:
 	_ch_ptr = _PTR_MOST;
 _scrub_ascii_loop:
 	if (_c_ch_scrubbed == _c_ch_file_size)
-		goto _write_file;
+		goto _scrub_trigraphs;
 
 	_ch = mem[_ch_ptr];
 	if (_ch < _CH_TAB)
@@ -236,6 +236,10 @@ _diag_print_lf:
 	out(_CH_LINE_FEED);
 	goto _halt_failure;
 
+//_scrub_trigraphs
+_scrub_trigraphs:
+	// TODO
+	goto _write_file;
 
 // _write_file
 // !!! expects _c_ch_file_size set

@@ -1,97 +1,54 @@
 
 // thincc.h
 
-#if defined _thincc_h_
-#error thincc.h must not be included multiple times
+#include "prelude.h"
+
+#if defined M_THINCC
+	#error thincc.h defines 'main', do not include it repeatedly
 #else
-#define _thincc_h_
+	#define M_THINCC
 #endif
-
-// includes
-#include <stdint.h>
-#include <stdio.h>
-#include <limits.h>
-
-// helper macros
-/*{*/
-#define STATEMENT(x) do { x } while (0)
-
-#define SPIN_EXIT 1
-#if SPIN_EXIT
-#define EXIT(x) STATEMENT((void)(x); while(1) {})
-#else
-#include <stdlib.h>
-#define EXIT(x) exit(x)
-#endif
-/*}*/
-
-// u16, the only type in thin c
-typedef uint16_t u16;
 
 // thin c "heap" memory is 64k 16 bit words.
 // distinct from globals/locals in the including file.
-u16 mem[UINT16_MAX+1];
-
-// "syscalls"
-/*{*/
-// fgetc stdin
-u16 in(void)
-{
-	int ch = fgetc(stdin);
-	if (ch == EOF)
-	{
-		if (ferror(stdin))
-		{
-			perror("fgetc");
-			EXIT(1);
-		}
-		else
-		{
-			return 0xFFFF;
-		}
-	}
-	else
-	{
-		return (u16)ch;
-	}
-}
-// fputc stdout
-void out(u16 ch)
-{
-	if (fputc((unsigned char)ch, stdout) == EOF) 
-	{
-		perror("fputc");
-		EXIT(1);
-	}
-}
-/*}*/
+u16 mem[65536];
 
 // main function. 
-// calls step function in a loop,
-// until it returns a sentinel.
-u16 step(u16 fn);
+// call step() until it returns a sentinel.
+#define M_FN_START	((u16)0x0000)
+#define M_RC_EXIT	((u16)0xFFFF)
+#define M_RC_ABORT	((u16)0xFFFE)
+u16 step(u16 arg_fn);
 int main(void)
 {
-	u16 fn = 0;
+	u16 v_fn = M_FN_START;
 	do
 	{
-		fn = step(fn);
-	} while (fn != 0xFFFF);
+		v_fn = step(v_fn);
+	} while (v_fn != M_RC_EXIT && v_fn != M_RC_ABORT);
 
-	EXIT(0);
+	enum { DEBUG_SPIN = 1 };
+	volatile int v_debug_spin = DEBUG_SPIN;
+	if (v_debug_spin)
+	{
+	l_debug_spin:
+		goto l_debug_spin;
+	}
+
+	// return code from sentinel
+	// M_RC_EXIT = no error
+	// M_RC_ABORT = error
+	return (v_fn != M_RC_EXIT);
 }
-
-// helper for the macros below
-#define REQ_SEMI STATEMENT(;)
 
 // macros intended to be consumed from thin c code
 /*{*/
 #define ENUM(name, value)	enum { name = value }
 
-#define BRANCH(fn)			switch (fn) { REQ_SEMI
-#define CUT					} REQ_SEMI
+#define BRANCH(fn)			switch (fn) { do { ; } while (0)
+#define CUT					} do { ; } while (0)
 
-#define CASE(fn)			case fn: { REQ_SEMI
-#define DEFAULT				default: { REQ_SEMI
+#define CASE(fn)			case fn: { do { ; } while (0)
+#define DEFAULT				default: { do { ; } while (0)
 #define END					} break
 /*}*/

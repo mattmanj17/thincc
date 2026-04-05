@@ -40,3 +40,17 @@ void out(u16 ch)
 		goto _halt_out;
 	}
 }
+
+u16 step(u16 fn);
+
+int main(void)
+{
+	u16 fn = 0;
+	do
+	{
+		fn = step(fn);
+	} while (fn != 0xFFFF);
+
+_spin:
+	goto _spin;
+}

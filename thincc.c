@@ -239,6 +239,61 @@ _diag_print_lf:
 //_scrub_trigraphs
 _scrub_trigraphs:
 	// TODO
+    /*
+    const char * find_first_trigraph(
+        const char * ch_ptr, 
+        size_t c_ch
+    )
+    {
+        // end of string
+        const char * ch_ptr_end = ch_ptr + c_ch;
+        
+        // number of question marks seen so far
+        size_t c_q_mark = 0;
+
+        // ??< -> {, ??> -> }, ??( -> [
+        // ??) -> ], ??= -> #, ??/ -> \
+        // ??' -> ^, ??! -> |, ??- -> ~
+        static const char trigraph_chars[9] = {
+            '<' , '>', '(', 
+            ')' , '=', '/', 
+            '\'', '!', '-',
+        };
+
+        // search whole string
+        for (; ch_ptr < ch_ptr_end; ++ch_ptr)
+        {
+            // read ch
+            char ch = *ch_ptr;
+
+            // don't have 2 '?' yet?
+            if (c_q_mark < 2)
+            {
+                // inc if a '?', or reset
+                c_q_mark = (ch == '?') ? c_q_mark + 1 : 0;
+                continue;
+            }
+
+            // after two '?', are we on a trigraph ch?
+            bool found_trigraph = false;
+            for (size_t i = 0; i < 9 && !found_trigraph; ++i)
+            {
+                // break loop early if found in trigraph_chars
+                found_trigraph = (trigraph_chars[i] == ch);
+            }
+
+            // trigraph? return start of it
+            if (found_trigraph)
+                return ch_ptr - 2;
+
+            // deal with '???' case, or reset count
+            c_q_mark = (ch == '?') ? 2 : 0;
+        }
+
+        // no trigraph found
+        return NULL;
+    }
+    */
 	goto _write_file;
 
 // _write_file

@@ -48,9 +48,15 @@ enum {
 	thinc_eof = 0xFFFF,
 };
 
+// opcodes
+thinc_u16 thinc_load(thinc_u16 addr);
+void thinc_store(thinc_u16 addr, thinc_u16 value);
+void thinc_sub(thinc_u16 addr, thinc_u16 value);
+void thinc_add(thinc_u16 addr, thinc_u16 value);
+
 // syscalls
 thinc_u16 thinc_getc(void);
-void thinc_putc(thinc_u16 arg_ch);
+void thinc_putc(thinc_u16 ch);
 
 // entry point
-thinc_u16 thinc_next(thinc_u16 fn);
+thinc_u16 thinc_run(thinc_u16 instruction);

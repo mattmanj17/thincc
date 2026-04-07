@@ -2,6 +2,7 @@
 #include <limits.h>
 #include <assert.h>
 #include <stdio.h>
+
 #include "prelude.h"
 
 static_assert(
@@ -11,6 +12,24 @@ static_assert(
 	sizeof(thinc_u16) == 2,
 	"u16 must be two bytes"
 );
+
+thinc_u16 mem[USHRT_MAX + 1];
+
+thinc_u16 thinc_load(thinc_u16 addr) {
+	return mem[addr];
+}
+
+void thinc_store(thinc_u16 addr, thinc_u16 value) {
+	mem[addr] = value;
+}
+
+void thinc_sub(thinc_u16 addr, thinc_u16 value) {
+	mem[addr] -= value;
+}
+
+void thinc_add(thinc_u16 addr, thinc_u16 value) {
+	mem[addr] += value;
+}
 
 thinc_u16 thinc_getc(void) {
 	int c = fgetc(stdin);

@@ -1,18 +1,10 @@
 
-// prelude.h
-
-
-
-// sanity check our compiler/etc 
-
-// compiler id/version
 // see: https://sourceforge.net/p/predef/wiki/Compilers/
 #ifdef _MSC_VER
 #else
 #	error unsupported compiler
 #endif
 
-// __STDC__ / etc
 // see https://sourceforge.net/p/predef/wiki/Standards/
 #ifndef __STDC__
 #	error non-standard c compiler
@@ -29,27 +21,21 @@
 #	error c++ compilers not supported
 #endif
 
-// OS
 // see https://sourceforge.net/p/predef/wiki/OperatingSystems/
 #ifdef _WIN64
 #else
 #	error unsupported os
 #endif
 
-// ARCH
 // see https://sourceforge.net/p/predef/wiki/Architectures/
 #ifdef _M_AMD64
 #else
 #	error unsupported architecture
 #endif
 
-
-
-// u16, the only type in thin c
+// NOTE the size of this is confirmed in io.c
 typedef unsigned short u16;
 
-
-
-// io syscalls
+// syscalls
 u16 in(void);
 void out(u16 arg_ch);

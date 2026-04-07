@@ -30,37 +30,41 @@ int main(void) {
 	return (v_fn != M_RC_EXIT);
 }
 
-
-enum fn {
-	fn_start,
-	fn_fill_file_buffer,
-	fn_print_file_buffer,
-	fn_print_span,
-};
-
-enum {
-	d_0 = 0x0000,
-	d_1 = 0x0001,
-
-	d_c_ch_file_size_max = 0x8000,
-	d_ptr_last = 0xFFFF,
-
-	// d_ptr_last - d_c_ch_file_size_max + 1
-	d_ch_ptr_file_buffer_start = 0x8000
-};
-
 // global argument registers
-u16 g_arg_0 = d_0;
-u16 g_arg_1 = d_0;
 
 u16 step(u16 fn) {
 	switch (fn) {
+		
+		enum {
+			d_0 = 0x0000,
+			d_1 = 0x0001,
+
+			d_c_ch_file_size_max = 0x8000,
+			d_ptr_last = 0xFFFF,
+
+			// d_ptr_last - d_c_ch_file_size_max + 1
+			d_ch_ptr_file_buffer_start = 0x8000
+		};
+
+		enum {
+			g_arg_0 = d_0,
+			g_arg_1 = d_1,
+		};
+
+		enum {
+			fn_start,
+			fn_fill_file_buffer,
+			fn_print_file_buffer,
+			fn_print_span,
+		};
+
+		
 
 		// void start();
 		case fn_start:
 		{
 			// fill_file_buffer(0);
-			g_arg_0 = d_0;
+			mem[g_arg_0] = d_0;
 			return fn_fill_file_buffer;
 		}
 		break;
@@ -68,7 +72,7 @@ u16 step(u16 fn) {
 		// void fill_file_buffer(u16 c_ch_file_size_cur);
 		case fn_fill_file_buffer:
 		{
-			u16 v_c_ch_file_size_cur = g_arg_0;
+			u16 v_c_ch_file_size_cur = mem[g_arg_0];
 			u16 v_ch = d_0;
 			u16 v_ch_ptr = d_ch_ptr_file_buffer_start;
 
@@ -90,7 +94,7 @@ u16 step(u16 fn) {
 			v_c_ch_file_size_cur += d_1;
 
 			// recurse
-			g_arg_0 = v_c_ch_file_size_cur;
+			mem[g_arg_0] = v_c_ch_file_size_cur;
 			return fn_fill_file_buffer;
 		} 
 		break;
@@ -100,20 +104,20 @@ u16 step(u16 fn) {
 		{
 
 			// exit if not supposed to print any ch's
-			if (g_arg_0 == d_0) {
+			if (mem[g_arg_0] == d_0) {
 				return M_RC_EXIT;
 			}
 
 			// turn v_file_size into ch_ptr_last
 			// NOTE we must dec by 1 to get the "last" ptr
-			g_arg_0 -= d_1;
-			g_arg_0 += d_ch_ptr_file_buffer_start;
+			mem[g_arg_0] -= d_1;
+			mem[g_arg_0] += d_ch_ptr_file_buffer_start;
 
 			// move to ch_ptr_last
-			g_arg_1 = g_arg_0;
+			mem[g_arg_1] = mem[g_arg_0];
 
 			// ch_ptr_first = file_buffer_start
-			g_arg_0 = d_ch_ptr_file_buffer_start;
+			mem[g_arg_0] = d_ch_ptr_file_buffer_start;
 
 			// call print_span
 			return fn_print_span;
@@ -123,8 +127,8 @@ u16 step(u16 fn) {
 		// void print_span(u16 ch_ptr_first, u16 ch_ptr_last);
 		case fn_print_span:
 		{
-			u16 v_ch_ptr_first = g_arg_0;
-			u16 v_ch_ptr_last = g_arg_1;
+			u16 v_ch_ptr_first = mem[g_arg_0];
+			u16 v_ch_ptr_last = mem[g_arg_1];
 
 			if (v_ch_ptr_first > v_ch_ptr_last) {
 				// done printing
@@ -143,7 +147,7 @@ u16 step(u16 fn) {
 			v_ch_ptr_first += d_1;
 
 			// recurse
-			g_arg_0 = v_ch_ptr_first;
+			mem[g_arg_0] = v_ch_ptr_first;
 			return fn_print_span;
 		} 
 		break;

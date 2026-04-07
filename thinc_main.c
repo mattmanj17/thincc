@@ -1,9 +1,7 @@
 
 #include "prelude.h"
-#include "thinc_cases.def"
-
-
-
+#include "thinc.defs"
+THINC_BEGIN
 enum {
 	d_0 = 0x0000,
 	d_1 = 0x0001,
@@ -21,10 +19,6 @@ enum {
 	fn_print_file_buffer,
 	fn_print_span,
 };
-
-
-
-THINC_CASES_BEGIN
 
 case fn_start:
 {
@@ -118,5 +112,4 @@ default:
 	return thinc_exit_failure;
 }
 break;
-
-THINC_CASES_END
+THINC_END

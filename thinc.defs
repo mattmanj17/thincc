@@ -1,0 +1,16 @@
+
+#ifdef THINC_BEGIN
+#error THINC_BEGIN already defined?
+#else
+#define THINC_BEGIN \
+thinc_u16 thinc_main(thinc_u16 instruction) {\
+	switch (instruction) {
+#endif
+
+#ifdef THINC_END
+#error THINC_END already defined?
+#else
+#define THINC_END \
+	}\
+}
+#endif

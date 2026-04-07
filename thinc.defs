@@ -3,8 +3,8 @@
 #error THINC_BEGIN already defined?
 #else
 #define THINC_BEGIN \
-thinc_u16 thinc_main(thinc_u16 instruction) {\
-	switch (instruction) {
+thinc_u16 thinc_main(thinc_u16 thinc_cmd) {\
+	switch (thinc_cmd) {
 #endif
 
 #ifdef THINC_END

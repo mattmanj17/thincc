@@ -2,16 +2,17 @@
 #include "prelude.h"
 #include "thinc.defs"
 THINC_BEGIN
+enum cmd {
+	fn_start,
+	fn_fill_file_buffer,
+	fn_print_file_buffer,
+	fn_print_span,
+};
 enum {
 	d_c_ch_file_size_max = 0x8000,
 	d_ptr_last = 0xFFFF,
 
 	d_ch_ptr_file_buffer_start = d_ptr_last - d_c_ch_file_size_max + 1,
-
-	fn_start = 0x0000,
-	fn_fill_file_buffer,
-	fn_print_file_buffer,
-	fn_print_span,
 };
 
 case fn_start:

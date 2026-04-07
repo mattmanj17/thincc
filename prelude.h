@@ -34,8 +34,23 @@
 #endif
 
 // NOTE size confirmed in prelude.c
-typedef unsigned short u16;
+typedef unsigned short thinc_u16;
+
+// some constants
+enum {
+	// EXIT_FAILURE
+	thinc_exit_failure = 0xFFFE,
+
+	// EXIT_SUCCESS
+	thinc_exit_success = 0xFFFF,
+
+	// EOF
+	thinc_eof = 0xFFFF,
+};
 
 // syscalls
-u16 thinc_getc(void);
-void thinc_putc(u16 arg_ch);
+thinc_u16 thinc_getc(void);
+void thinc_putc(thinc_u16 arg_ch);
+
+// entry point
+thinc_u16 thinc_next(thinc_u16 fn);

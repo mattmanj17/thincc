@@ -8,11 +8,11 @@ static_assert(
 	CHAR_BIT == 8,
 	"bytes must be 8 bits");
 static_assert(
-	sizeof(u16) == 2,
+	sizeof(thinc_u16) == 2,
 	"u16 must be two bytes"
 );
 
-u16 thinc_getc(void) {
+thinc_u16 thinc_getc(void) {
 	int c = fgetc(stdin);
 	if (c == EOF) {
 		if (ferror(stdin)) {
@@ -22,7 +22,7 @@ u16 thinc_getc(void) {
 			}
 		}
 		else {
-			return 0xFFFF;
+			return thinc_eof;
 		}
 	}
 	else {
@@ -30,7 +30,7 @@ u16 thinc_getc(void) {
 	}
 }
 
-void thinc_putc(u16 arg_ch) {
+void thinc_putc(thinc_u16 arg_ch) {
 	if (fputc((unsigned char)arg_ch, stdout) == EOF) {
 		perror("fputc");
 		for (;;) {

@@ -1,19 +1,17 @@
 
 #include "prelude.h"
-u16 mem[65536];
-enum {
-	M_RC_ABORT = 0xFFFE,
-	M_RC_EXIT = 0xFFFF,
-	M_EOF = 0xFFFF,
-};
-u16 step(u16 fn);
-int main(void) {
-	u16 v_fn = 0;
-	do {
-		v_fn = step(v_fn);
-	}
-	while (v_fn != M_RC_EXIT && v_fn != M_RC_ABORT);
+thinc_u16 mem[65536];
 
+
+int main(void) {
+	thinc_u16 instruction = 0;
+	do {
+		instruction = thinc_next(instruction);
+	}
+	while (
+		instruction != thinc_exit_success &&
+		instruction != thinc_exit_failure
+	);
 	for (;;) {
 		// do nothing
 	}
@@ -21,7 +19,7 @@ int main(void) {
 
 // global argument registers
 
-u16 step(u16 fn) {
+thinc_u16 thinc_next(thinc_u16 fn) {
 	switch (fn) {
 
 		enum {
@@ -61,20 +59,20 @@ u16 step(u16 fn) {
 	// void fill_file_buffer(u16 c_ch_file_size_cur);
 	case fn_fill_file_buffer:
 	{
-		u16 v_c_ch_file_size_cur = mem[g_arg_0];
-		u16 v_ch = d_0;
-		u16 v_ch_ptr = d_ch_ptr_file_buffer_start;
+		thinc_u16 v_c_ch_file_size_cur = mem[g_arg_0];
+		thinc_u16 v_ch = d_0;
+		thinc_u16 v_ch_ptr = d_ch_ptr_file_buffer_start;
 
 		// read
 		v_ch = thinc_getc();
-		if (v_ch == M_EOF) {
+		if (v_ch == thinc_eof) {
 			// NOTE v_file_size is sitting in g_arg_0
 			return fn_print_file_buffer;
 		}
 
 		// buffer exhasted
 		if (v_c_ch_file_size_cur >= d_c_ch_file_size_max) {
-			return M_RC_ABORT;
+			return thinc_exit_failure;
 		}
 
 		// store
@@ -94,7 +92,7 @@ u16 step(u16 fn) {
 
 		// exit if not supposed to print any ch's
 		if (mem[g_arg_0] == d_0) {
-			return M_RC_EXIT;
+			return thinc_exit_success;
 		}
 
 		// turn v_file_size into ch_ptr_last
@@ -116,12 +114,12 @@ u16 step(u16 fn) {
 	// void print_span(u16 ch_ptr_first, u16 ch_ptr_last);
 	case fn_print_span:
 	{
-		u16 v_ch_ptr_first = mem[g_arg_0];
-		u16 v_ch_ptr_last = mem[g_arg_1];
+		thinc_u16 v_ch_ptr_first = mem[g_arg_0];
+		thinc_u16 v_ch_ptr_last = mem[g_arg_1];
 
 		if (v_ch_ptr_first > v_ch_ptr_last) {
 			// done printing
-			return M_RC_EXIT;
+			return thinc_exit_success;
 		}
 
 		// print
@@ -129,7 +127,7 @@ u16 step(u16 fn) {
 
 		// handle case where v_ch_ptr_last is the end of mem
 		if (v_ch_ptr_first == d_ptr_last) {
-			return M_RC_EXIT;
+			return thinc_exit_success;
 		}
 
 		// inc
@@ -144,7 +142,7 @@ u16 step(u16 fn) {
 	// unknown function?
 	default:
 	{
-		return M_RC_ABORT;
+		return thinc_exit_failure;
 	}
 	break;
 	}

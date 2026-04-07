@@ -1,18 +1,16 @@
 
-// io.c
-
 #include <limits.h>
 #include <assert.h>
 #include <stdio.h>
 #include "prelude.h"
 
 static_assert(
-	CHAR_BIT == 8, 
+	CHAR_BIT == 8,
 	"bytes must be 8 bits");
 static_assert(
-	sizeof(u16) == 2, 
+	sizeof(u16) == 2,
 	"u16 must be two bytes"
-);
+	);
 
 u16 in(void)
 {
@@ -38,7 +36,7 @@ u16 in(void)
 
 void out(u16 arg_ch)
 {
-	if (fputc((unsigned char)arg_ch, stdout) == EOF) 
+	if (fputc((unsigned char)arg_ch, stdout) == EOF)
 	{
 		perror("fputc");
 	l_debug_spin:

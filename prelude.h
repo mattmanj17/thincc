@@ -46,6 +46,9 @@ enum {
 
 	// EOF
 	thinc_eof = 0xFFFF,
+
+	// max pointer
+	thinc_addr_last = 0xFFFF,
 };
 
 // opcodes

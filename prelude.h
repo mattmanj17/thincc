@@ -59,4 +59,4 @@ thinc_u16 thinc_getc(void);
 void thinc_putc(thinc_u16 ch);
 
 // entry point
-thinc_u16 thinc_run(thinc_u16 instruction);
+thinc_u16 thinc_main(thinc_u16 instruction);

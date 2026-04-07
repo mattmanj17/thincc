@@ -2,35 +2,31 @@
 #include "prelude.h"
 #include "thinc.defs"
 THINC_BEGIN
-enum cmd { start, read, print };
-enum def { buf = 256 };
-enum arg { min, max, cursor, ch };
-case start: {
-	thinc_store(min, buf);
-	thinc_store(max, thinc_ptr_max);
-	thinc_store(cursor, thinc_load(min));
-	return read;
-}
-case read: {
-	thinc_store(ch, thinc_getc());
-	if (thinc_load(ch) == thinc_eof) 
-		return print;
-	if (thinc_load(cursor) < thinc_load(min)) 
-		return thinc_exit_failure;
-	if (thinc_load(cursor) >= thinc_load(max)) 
-		return thinc_exit_failure;
-	thinc_store(thinc_load(cursor), thinc_load(ch));
-	thinc_add(cursor, 1);
-	return read;
-}
-case print: {
-	if (thinc_load(min) >= thinc_load(max))
-		return thinc_exit_success;
-	thinc_putc(thinc_load_indirect(min));
-	thinc_add(min, 1);
-	return print;
-}
-default: {
-	return thinc_exit_failure;
-}
+enum cases { start, read, print };
+enum defs { 
+    buffer_ptr = 256, 
+    buffer_end = 0xFFFF,
+};
+enum vars { begin, end, ch };
+case start:
+    set(begin, buffer_ptr);
+    set(end, buffer_ptr);
+    return read;
+case read:
+    set(ch, in());
+    if (get(ch) == eof) 
+        return print;
+    if (get(end) >= buffer_end) 
+        return rc_abort;
+    set(get(end), get(ch));
+    inc(end);
+    return read;
+case print:
+    if (get(begin) >= get(end))
+        return rc_exit;
+    out(deref(begin));
+    inc(begin);
+    return print;
+default: 
+    return rc_abort;
 THINC_END

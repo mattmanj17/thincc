@@ -1,68 +1,37 @@
 
-#include <limits.h>
 #include <assert.h>
+#include <limits.h>
 #include <stdio.h>
-
+#include <stdlib.h>
 #include "prelude.h"
+static_assert(CHAR_BIT == 8, "!!!");
+static_assert(sizeof(u8) == 1, "!!!");
+static_assert(sizeof(u16) == 2, "!!!");
+static_assert(UCHAR_MAX == 0xFF, "!!!");
+static_assert(USHRT_MAX == 0xFFFF, "!!!");
 
-static_assert(
-	CHAR_BIT == 8,
-	"bytes must be 8 bits");
-static_assert(
-	sizeof(thinc_u16) == 2,
-	"u16 must be two bytes"
-);
+u16  mem[USHRT_MAX + 1];
+u16  get(u16 ptr)          { return mem[ptr];          }
+u16  deref(u16 ptr_ptr)    { return mem[mem[ptr_ptr]]; }
+void set(u16 ptr, u16 val) { mem[ptr]  = val;          }
+void sub(u16 ptr, u16 val) { mem[ptr] -= val;          }
+void dec(u16 ptr)          { sub(ptr, 1);              }
+void add(u16 ptr, u16 val) { mem[ptr] += val;          }
+void inc(u16 ptr)          { add(ptr, 1);              }
 
-thinc_u16 mem[USHRT_MAX + 1];
-
-thinc_u16 thinc_load(thinc_u16 addr) {
-	thinc_u16 val = mem[addr];
-	return val;
+u16 in(void) {
+    int c = fgetc(stdin);
+    if (c != EOF)            
+        return (u16)c;
+    if (feof(stdin))        
+        return eof;
+    perror("fgetc");
+    exit(1);
 }
-
-thinc_u16 thinc_load_indirect(thinc_u16 addr) {
-	thinc_u16 addr_indirect = mem[addr];
-	thinc_u16 val = mem[addr_indirect];
-	return val;
-}
-
-void thinc_store(thinc_u16 addr, thinc_u16 value) {
-	mem[addr] = value;
-}
-
-void thinc_sub(thinc_u16 addr, thinc_u16 rhs) {
-	thinc_u16 lhs = mem[addr];
-	mem[addr] = lhs - rhs;
-}
-
-void thinc_add(thinc_u16 addr, thinc_u16 rhs) {
-	thinc_u16 lhs = mem[addr];
-	mem[addr] = lhs + rhs;
-}
-
-thinc_u16 thinc_getc(void) {
-	int c = fgetc(stdin);
-	if (c == EOF) {
-		if (ferror(stdin)) {
-			perror("fgetc");
-			for (;;) {
-				// do nothing
-			}
-		}
-		else {
-			return thinc_eof;
-		}
-	}
-	else {
-		return (unsigned char)c;
-	}
-}
-
-void thinc_putc(thinc_u16 arg_ch) {
-	if (fputc((unsigned char)arg_ch, stdout) == EOF) {
-		perror("fputc");
-		for (;;) {
-			// do nothing
-		}
-	}
+void out(u16 val) {
+    u8 ch = (u8)val;
+    if (fputc(ch, stdout) != EOF) 
+        return;
+    perror("fputc");
+    exit(1);
 }

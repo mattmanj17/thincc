@@ -20,8 +20,7 @@ u16 in(void)
 		if (ferror(stdin))
 		{
 			perror("fgetc");
-		l_debug_spin:
-			goto l_debug_spin;
+			for (;;) {}
 		}
 		else
 		{
@@ -39,7 +38,6 @@ void out(u16 arg_ch)
 	if (fputc((unsigned char)arg_ch, stdout) == EOF)
 	{
 		perror("fputc");
-	l_debug_spin:
-		goto l_debug_spin;
+		for (;;) {}
 	}
 }

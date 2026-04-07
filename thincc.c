@@ -11,9 +11,12 @@ int main(void) {
 	u16 v_fn = 0;
 	do {
 		v_fn = step(v_fn);
-	} while (v_fn != M_RC_EXIT && v_fn != M_RC_ABORT);
+	}
+	while (v_fn != M_RC_EXIT && v_fn != M_RC_ABORT);
 
-	for (;;) {}
+	for (;;) {
+		// do nothing
+	}
 }
 
 // global argument registers

@@ -33,7 +33,7 @@
 #	error unsupported architecture
 #endif
 
-// NOTE the size of this is confirmed in prelude.c
+// NOTE size confirmed in prelude.c
 typedef unsigned short u16;
 
 // syscalls

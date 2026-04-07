@@ -10,34 +10,31 @@ static_assert(
 static_assert(
 	sizeof(u16) == 2,
 	"u16 must be two bytes"
-	);
+);
 
-u16 in(void)
-{
+u16 in(void) {
 	int v_ch = fgetc(stdin);
-	if (v_ch == EOF)
-	{
-		if (ferror(stdin))
-		{
+	if (v_ch == EOF) {
+		if (ferror(stdin)) {
 			perror("fgetc");
-			for (;;) {}
+			for (;;) {
+				// do nothing
+			}
 		}
-		else
-		{
+		else {
 			return 0xFFFF;
 		}
 	}
-	else
-	{
+	else {
 		return (u16)v_ch;
 	}
 }
 
-void out(u16 arg_ch)
-{
-	if (fputc((unsigned char)arg_ch, stdout) == EOF)
-	{
+void out(u16 arg_ch) {
+	if (fputc((unsigned char)arg_ch, stdout) == EOF) {
 		perror("fputc");
-		for (;;) {}
+		for (;;) {
+			// do nothing
+		}
 	}
 }

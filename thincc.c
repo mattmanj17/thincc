@@ -2,16 +2,12 @@
 // thincc.c
 
 #include "prelude.h"
-
-// thin c "heap" memory is 64k 16 bit words.
-// distinct from globals/locals in the including file.
 u16 mem[65536];
-
-// main function. 
-// call step() until it returns a sentinel.
-#define M_RC_EXIT	((u16)0xFFFF)
-#define M_RC_ABORT	((u16)0xFFFE)
-#define M_EOF		((u16)0xFFFF)
+enum { 
+	M_RC_ABORT	= 0xFFFE,
+	M_RC_EXIT	= 0xFFFF,
+	M_EOF		= 0xFFFF,
+};
 u16 step(u16 fn);
 int main(void)
 {

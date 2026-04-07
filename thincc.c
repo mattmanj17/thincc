@@ -64,7 +64,7 @@ u16 g_arg_0 = d_0;
 u16 g_arg_1 = d_0;
 
 u16 step(u16 fn) {
-BRANCH(fn);
+BRANCH(fn)
 
 	// void start();
 	CASE(fn_start);
@@ -151,8 +151,8 @@ BRANCH(fn);
 	END;
 
 	// unknown function?
-	DEFAULT;
+	DEFAULT
 		return M_RC_ABORT;
 	END;
-CUT;
+CUT
 }

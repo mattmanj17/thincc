@@ -12,9 +12,9 @@ static_assert(
 	"u16 must be two bytes"
 );
 
-u16 in(void) {
-	int v_ch = fgetc(stdin);
-	if (v_ch == EOF) {
+u16 thinc_getc(void) {
+	int c = fgetc(stdin);
+	if (c == EOF) {
 		if (ferror(stdin)) {
 			perror("fgetc");
 			for (;;) {
@@ -26,11 +26,11 @@ u16 in(void) {
 		}
 	}
 	else {
-		return (u16)v_ch;
+		return (unsigned char)c;
 	}
 }
 
-void out(u16 arg_ch) {
+void thinc_putc(u16 arg_ch) {
 	if (fputc((unsigned char)arg_ch, stdout) == EOF) {
 		perror("fputc");
 		for (;;) {

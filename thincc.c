@@ -66,7 +66,7 @@ u16 step(u16 fn) {
 		u16 v_ch_ptr = d_ch_ptr_file_buffer_start;
 
 		// read
-		v_ch = in();
+		v_ch = thinc_getc();
 		if (v_ch == M_EOF) {
 			// NOTE v_file_size is sitting in g_arg_0
 			return fn_print_file_buffer;
@@ -125,7 +125,7 @@ u16 step(u16 fn) {
 		}
 
 		// print
-		out(mem[v_ch_ptr_first]);
+		thinc_putc(mem[v_ch_ptr_first]);
 
 		// handle case where v_ch_ptr_last is the end of mem
 		if (v_ch_ptr_first == d_ptr_last) {

@@ -37,5 +37,5 @@
 typedef unsigned short u16;
 
 // syscalls
-u16 in(void);
-void out(u16 arg_ch);
+u16 thinc_getc(void);
+void thinc_putc(u16 arg_ch);

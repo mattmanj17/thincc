@@ -3,16 +3,13 @@
 #include "thinc.defs"
 THINC_BEGIN
 enum {
-	d_0 = 0x0000,
-	d_1 = 0x0001,
-
 	d_c_ch_file_size_max = 0x8000,
 	d_ptr_last = 0xFFFF,
 
 	d_ch_ptr_file_buffer_start = d_ptr_last - d_c_ch_file_size_max + 1,
 
-	g_arg_0 = d_0,
-	g_arg_1 = d_1,
+	g_arg_0 = 0x0000,
+	g_arg_1 = 0x0001,
 
 	fn_start = 0x0000,
 	fn_fill_file_buffer,
@@ -22,7 +19,7 @@ enum {
 
 case fn_start:
 {
-	thinc_store(g_arg_0, d_0);
+	thinc_store(g_arg_0, 0x0000);
 	return fn_fill_file_buffer;
 }
 break;
@@ -30,7 +27,7 @@ break;
 case fn_fill_file_buffer:
 {
 	thinc_u16 v_c_ch_file_size_cur = thinc_load(g_arg_0);
-	thinc_u16 v_ch = d_0;
+	thinc_u16 v_ch = 0x0000;
 	thinc_u16 v_ch_ptr = d_ch_ptr_file_buffer_start;
 
 	// read
@@ -48,7 +45,7 @@ case fn_fill_file_buffer:
 	// store
 	v_ch_ptr += v_c_ch_file_size_cur;
 	thinc_store(v_ch_ptr, v_ch);
-	v_c_ch_file_size_cur += d_1;
+	v_c_ch_file_size_cur += 0x0001;
 
 	// recurse
 	thinc_store(g_arg_0, v_c_ch_file_size_cur);
@@ -60,13 +57,13 @@ case fn_print_file_buffer:
 {
 
 	// exit if not supposed to print any ch's
-	if (thinc_load(g_arg_0) == d_0) {
+	if (thinc_load(g_arg_0) == 0x0000) {
 		return thinc_exit_success;
 	}
 
 	// turn v_file_size into ch_ptr_last
 	// NOTE we must dec by 1 to get the "last" ptr
-	thinc_sub(g_arg_0, d_1);
+	thinc_sub(g_arg_0, 0x0001);
 	thinc_add(g_arg_0, d_ch_ptr_file_buffer_start);
 
 	// move to ch_ptr_last
@@ -99,7 +96,7 @@ case fn_print_span:
 	}
 
 	// inc
-	v_ch_ptr_first += d_1;
+	v_ch_ptr_first += 0x0001;
 
 	// recurse
 	thinc_store(g_arg_0, v_ch_ptr_first);

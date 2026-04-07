@@ -16,19 +16,28 @@ static_assert(
 thinc_u16 mem[USHRT_MAX + 1];
 
 thinc_u16 thinc_load(thinc_u16 addr) {
-	return mem[addr];
+	thinc_u16 val = mem[addr];
+	return val;
+}
+
+thinc_u16 thinc_load_indirect(thinc_u16 addr) {
+	thinc_u16 addr_indirect = mem[addr];
+	thinc_u16 val = mem[addr_indirect];
+	return val;
 }
 
 void thinc_store(thinc_u16 addr, thinc_u16 value) {
 	mem[addr] = value;
 }
 
-void thinc_sub(thinc_u16 addr, thinc_u16 value) {
-	mem[addr] -= value;
+void thinc_sub(thinc_u16 addr, thinc_u16 rhs) {
+	thinc_u16 lhs = mem[addr];
+	mem[addr] = lhs - rhs;
 }
 
-void thinc_add(thinc_u16 addr, thinc_u16 value) {
-	mem[addr] += value;
+void thinc_add(thinc_u16 addr, thinc_u16 rhs) {
+	thinc_u16 lhs = mem[addr];
+	mem[addr] = lhs + rhs;
 }
 
 thinc_u16 thinc_getc(void) {

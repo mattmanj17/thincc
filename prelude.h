@@ -48,11 +48,12 @@ enum {
 	thinc_eof = 0xFFFF,
 
 	// max pointer
-	thinc_addr_last = 0xFFFF,
+	thinc_ptr_max = 0xFFFF,
 };
 
 // opcodes
 thinc_u16 thinc_load(thinc_u16 addr);
+thinc_u16 thinc_load_indirect(thinc_u16 addr);
 void thinc_store(thinc_u16 addr, thinc_u16 value);
 void thinc_sub(thinc_u16 addr, thinc_u16 value);
 void thinc_add(thinc_u16 addr, thinc_u16 value);

@@ -33,8 +33,6 @@ int main(void)
 
 // macros intended to be consumed from thin c code
 /*{*/
-#define DEF(name, value)	enum { name = value }
-
 #define BRANCH(fn)			switch (fn) { do { ; } while (0)
 #define CUT					} do { ; } while (0)
 
@@ -50,14 +48,16 @@ enum fn {
 	fn_print_span,
 };
 
-DEF(d_0, 0x0000);
-DEF(d_1, 0x0001);
+enum {
+	d_0= 0x0000,
+	d_1= 0x0001,
 
-DEF(d_c_ch_file_size_max,		0x8000);
-DEF(d_ptr_last,					0xFFFF);
+	d_c_ch_file_size_max=		0x8000,
+	d_ptr_last=					0xFFFF,
 
-// d_ptr_last - d_c_ch_file_size_max + 1
-DEF(d_ch_ptr_file_buffer_start, 0x8000);
+	// d_ptr_last - d_c_ch_file_size_max + 1
+	d_ch_ptr_file_buffer_start= 0x8000
+};
 
 // global argument registers
 u16 g_arg_0 = d_0;

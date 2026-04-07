@@ -33,11 +33,11 @@ int main(void)
 
 // macros intended to be consumed from thin c code
 /*{*/
-#define BRANCH(fn)			switch (fn) { do { ; } while (0)
-#define CUT					} do { ; } while (0)
+#define BRANCH(fn)			switch (fn) {
+#define CUT					}
 
-#define CASE(fn)			case fn: { do { ; } while (0)
-#define DEFAULT				default: { do { ; } while (0)
+#define CASE(fn)			case fn: {
+#define DEFAULT				default: {
 #define END					} break
 /*}*/
 

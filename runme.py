@@ -25,5 +25,16 @@ subprocess.run(
 )
 clean_f(obj)
 need_f(exe)
-with open("thincc.c", "rb") as f:
-    subprocess.run([exe], stdin=f)
+with open(src, "rb") as f:
+    result = subprocess.run(
+        [exe], 
+        stdin=f,
+        capture_output=True,
+        text=False
+    )
+
+print("Testing...")
+if Path(src).read_bytes() != result.stdout:
+    print("Failed to echo stdin!")
+else:
+    print("OK!")

@@ -1,5 +1,5 @@
 # thincc
 
-build/run with
+build/test with
 
 `python runme.py`

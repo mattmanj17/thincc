@@ -108,7 +108,7 @@ u16         main_thinc(u16);
 
 #ifdef _MSC_VER
     // XXX : harden this against different CRT versions
-    __declspec(dllimport) void* __cdecl __acrt_iob_func(unsigned _Ix);
+    void* __cdecl __acrt_iob_func(unsigned _Ix);
     #define M_STDIN\
         (__acrt_iob_func(0))
     #define M_STDOUT\
@@ -123,6 +123,7 @@ extern int fgetc(void* stream);
 extern int fputc(int ch, void* stream);
 extern int feof(void* stream);
 extern void perror(const char *s);
+extern void exit(int exit_code);
 
 u16  mem[U16_MAX + 1];
 u16  get(u16 ptr)          { return mem[ptr];          }
@@ -138,14 +139,15 @@ u16 in(void) {
     if (feof(M_STDIN))        
         return NIL;
     perror("fgetc");
-    for (;;) {}
+    exit(1);
+    return NIL;
 }
 void out(u16 val) {
     u8 ch = (u8)val;
     if (fputc(ch, M_STDOUT) != M_EOF) 
         return;
     perror("fputc");
-    for (;;) {}
+    exit(1);
 }
 
 int main(void) {
@@ -153,7 +155,7 @@ int main(void) {
     while (i != EXIT && i != ABORT) {
         i = main_thinc(i);
     }
-    for (;;) {}
+    exit(i == ABORT);
 }
 
 u16 main_thinc(u16 i) { 

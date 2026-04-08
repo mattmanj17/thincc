@@ -156,13 +156,13 @@ int main(void) {
     for (;;) {}
 }
 
-enum cases { start, read, print };
-enum defs { 
-    buffer_ptr = 256, 
-    buffer_end = 0xFFFF,
-};
-enum vars { begin, end, ch };
 u16 main_thinc(u16 i) { 
+    enum cases { start, read, print };
+    enum defs { 
+        buffer_ptr = 256, 
+        buffer_end = 0xFFFF,
+    };
+    enum vars { begin, end, ch };
     switch (i) {
     case start:
         set(begin, buffer_ptr);

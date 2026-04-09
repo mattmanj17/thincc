@@ -58,9 +58,112 @@ void* sys_stdin(void) {
     return h;
 }
 
+/*
+__declspec(dllimport) 
+int __stdcall 
+ReadFile(
+    void *hFile,
+    void *lpBuffer,
+    unsigned int nNumberOfBytesToRead,
+    unsigned int *lpNumberOfBytesRead,
+    void *lpOverlapped
+);
+
+__declspec(dllimport) 
+int __stdcall 
+WriteFile(
+    void *hFile,
+    const void *lpBuffer,
+    unsigned int nNumberOfBytesToWrite,
+    unsigned int *lpNumberOfBytesWritten,
+    void *lpOverlapped
+);
+*/
+
+/*
+u16 mem[U16_MAX + 1];
+u16 get(u16 ptr) { 
+    return mem[ptr];
+}
+u16 deref(u16 ptr_ptr) { 
+    return mem[mem[ptr_ptr]]; 
+}
+void set(u16 ptr, u16 val) { 
+    mem[ptr] = val;
+}
+void sub(u16 ptr, u16 val) { 
+    mem[ptr] -= val;
+}
+void add(u16 ptr, u16 val) { 
+    mem[ptr] += val;
+}
+u16 in(void) {
+    int c = fgetc(M_STDIN);
+    if (c != M_EOF)            
+        return (u16)c;
+    if (feof(M_STDIN))        
+        return NIL;
+    perror("fgetc");
+    exit(1);
+    return NIL;
+}
+void out(u16 val) {
+    u8 ch = (u8)val;
+    if (fputc(ch, M_STDOUT) != M_EOF) 
+        return;
+    perror("fputc");
+    exit(1);
+}
+*/
+
 void entry(void) {
     (void) sys_stdin();
     (void) sys_stdout();
     (void) sys_stderr();
     sys_exit(0);
 }
+
+/*
+enum {
+    ABORT   = 0xFFFE,
+    EXIT    = 0xFFFF,
+    NIL     = 0xFFFF,
+};
+u16 dispatch(u16 i) { 
+    enum cases { start, read, print };
+    enum defs { 
+        buffer_ptr = 256, 
+        buffer_end = 0xFFFF,
+    };
+    enum vars { begin, end, ch };
+    switch (i) {
+    case start:
+        set(begin, buffer_ptr);
+        set(end, buffer_ptr);
+        return read;
+    case read:
+        set(ch, in());
+        if (get(ch) == NIL) 
+            return print;
+        if (get(end) >= buffer_end) 
+            return ABORT;
+        set(get(end), get(ch));
+        add(end, 1);
+        return read;
+    case print:
+        if (get(begin) >= get(end))
+            return EXIT;
+        out(deref(begin));
+        add(begin, 1);
+        return print;
+    default: 
+        return ABORT;
+    }
+}
+void entry(void) {
+    u16 cmd = 0;
+    while (cmd != EXIT && cmd != ABORT) {
+        cmd = dispatch(cmd);
+    }
+}
+*/

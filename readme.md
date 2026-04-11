@@ -1,18 +1,6 @@
 # thin c compiler
 
-try:
-- `python runme.py`
+we use a top level script called `kit` to work with the project. 
 
-or, just:
-- `cc thincc.c`
-
-where `cc` is your c compiler of choice.
-
-## compilers known to work
-- cl
-
-... and hopefully more in the future!
-
-## conventions
-
-files starting with `_M_` are macros
+in CMD.exe try:
+- `kit -h`

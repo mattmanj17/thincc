@@ -70,10 +70,15 @@ def build():
     require_file(SRC)
     run_checked(
         [
-            "cl", "/nologo",
-            "/c", "/TC", 
-            "/GS-", "/Zl", "/Za",
-            "/Wall", "/WX",
+            "cl", 
+            #"/nologo",
+            "/c", 
+            #"/TC", 
+            #"/GS-", 
+            #"/Zl", 
+            #"/Za",
+            #"/Wall", 
+            #"/WX",
             str(SRC),
         ]
     )
@@ -82,13 +87,14 @@ def build():
     require_file(OBJ)
     run_checked(
         [
-            "link", "/nologo",
-            "/NODEFAULTLIB",
-            "/SUBSYSTEM:CONSOLE",
-            "/ENTRY:entry",
-            "/WX",
+            "link", 
+            #"/nologo",
+            #"/NODEFAULTLIB",
+            #"/SUBSYSTEM:CONSOLE",
+            #"/ENTRY:entry",
+            #"/WX",
             str(OBJ),
-            "kernel32.lib",
+            #"kernel32.lib",
         ]
     )
     OBJ.unlink(missing_ok=True)

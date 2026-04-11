@@ -1,34 +1,96 @@
 
-#include "_M_NBIT_U.h"
+// macro gunk
+
+// usable "##"
+#define JOIN_R(a,b)             a##b
+#define JOIN_2(a,b)             JOIN_R(a,b)
+#define JOIN_3(a,b,c)           JOIN_2(JOIN_2(a,b),c)
+#define JOIN_4(a,b,c,d)         JOIN_2(JOIN_3(a,b,c),d)
+#define JOIN_5(a,b,c,d,e)       JOIN_2(JOIN_4(a,b,c,d),e)
+#define JOIN_6(a,b,c,d,e,f)     JOIN_2(JOIN_5(a,b,c,d,e),f)
+#define JOIN_7(a,b,c,d,e,f,g)   JOIN_2(JOIN_6(a,b,c,d,e,f),g)
+#define JOIN_8(a,b,c,d,e,f,g,h) JOIN_2(JOIN_7(a,b,c,d,e,f,g),h)
+
+// MAKE_NAME : name_0_1_2_3, name_4_5_6_7, etc
+#define COUNTER __COUNTER__
+#define MAKE_NAME JOIN_8(name_,COUNTER,_,COUNTER,_,COUNTER,_,COUNTER)
+
+// "typedef char foo[-1]" is an error, so this magic
+// acts as a portable static assert
+#define STATIC_ASSERT(x) typedef char MAKE_NAME[(x) ? 1 : -1]
+
+// warning gunk
+#ifdef _MSC_VER
+    #define MSVC_PRAGMA_WARNING_PUSH        __pragma(warning(push))
+    #define MSVC_PRAGMA_WARNING_DISABLE(x)  __pragma(warning(disable:x))
+    #define MSVC_PRAGMA_WARNING_POP         __pragma(warning(pop))
+#else
+    #define MSVC_PRAGMA_WARNING_PUSH
+    #define MSVC_PRAGMA_WARNING_DISABLE(x)
+    #define MSVC_PRAGMA_WARNING_POP
+#endif
+
+
+
+// fixed width unsigned types
 
 typedef unsigned char u8;
 #define U8_MAX 0xFFu
-M_VERIFY_NBIT_U(8);
+STATIC_ASSERT(sizeof(u8) == 1);
+STATIC_ASSERT((u8)U8_MAX == U8_MAX);
+STATIC_ASSERT((u8)-1 == U8_MAX);
+MSVC_PRAGMA_WARNING_PUSH
+    ///* cast truncates constant value * /
+    MSVC_PRAGMA_WARNING_DISABLE(4310)
+    STATIC_ASSERT((u8)(1 + U8_MAX) == 0);
+MSVC_PRAGMA_WARNING_POP
 
 typedef unsigned short u16;
 #define U16_MAX 0xFFFFu
-M_VERIFY_NBIT_U(16);
+STATIC_ASSERT(sizeof(u16) == 2);
+STATIC_ASSERT((u16)U16_MAX == U16_MAX);
+STATIC_ASSERT((u16)-1 == U16_MAX);
+MSVC_PRAGMA_WARNING_PUSH
+    MSVC_PRAGMA_WARNING_DISABLE(4310)
+    STATIC_ASSERT((u16)(1 + U16_MAX) == 0);
+MSVC_PRAGMA_WARNING_POP
 
 typedef unsigned int u32;
 #define U32_MAX 0xFFFFFFFFul
-M_VERIFY_NBIT_U(32);
+STATIC_ASSERT(sizeof(u32) == 4);
+STATIC_ASSERT((u32)U32_MAX == U32_MAX);
+STATIC_ASSERT((u32)-1 == U32_MAX);
+MSVC_PRAGMA_WARNING_PUSH
+    MSVC_PRAGMA_WARNING_DISABLE(4310)
+    STATIC_ASSERT((u32)(1 + U32_MAX) == 0);
+MSVC_PRAGMA_WARNING_POP
 
 typedef unsigned long long u64;
 #define U64_MAX 0xFFFFFFFFFFFFFFFFull
-M_VERIFY_NBIT_U(64);
+STATIC_ASSERT(sizeof(u64) == 8);
+STATIC_ASSERT((u64)U64_MAX == U64_MAX);
+STATIC_ASSERT((u64)-1 == U64_MAX);
+MSVC_PRAGMA_WARNING_PUSH
+    MSVC_PRAGMA_WARNING_DISABLE(4310)
+    STATIC_ASSERT((u64)(1 + U64_MAX) == 0);
+MSVC_PRAGMA_WARNING_POP
 
-#define M_K32FN(ret, fn) __declspec(dllimport) ret __stdcall fn
-#define M_INVALID_HANDLE ((void*)-1)
+
+
+// windows gunk
+
+#define K32FN(ret, fn) __declspec(dllimport) ret __stdcall fn
+#define INVALID_HANDLE ((void*)-1)
 
 void sys_exit(u32 exit_code) {
-    M_K32FN(void, ExitProcess(u32));
+    K32FN(void, ExitProcess(u32));
     ExitProcess(exit_code);
 }
 
 void* sys_stderr(void) {
-    M_K32FN(void*, GetStdHandle(u32));
+    K32FN(void*, GetStdHandle(u32));
     void* h = GetStdHandle((u32)-12);
-    if (h == M_INVALID_HANDLE || h == 0){
+    if (h == INVALID_HANDLE || h == 0){
         // if we do not even have stderr,
         //  we can not report errors,
         //  so just die with a hopefully
@@ -39,9 +101,9 @@ void* sys_stderr(void) {
 }
 
 void* sys_stdout(void) {
-    M_K32FN(void*, GetStdHandle(u32));
+    K32FN(void*, GetStdHandle(u32));
     void* h = GetStdHandle((u32)-11);
-    if (h == M_INVALID_HANDLE || h == 0){
+    if (h == INVALID_HANDLE || h == 0){
         // todo: diagnostic on stderr
         sys_exit((u32)-11);
     }
@@ -49,15 +111,16 @@ void* sys_stdout(void) {
 }
 
 void* sys_stdin(void) {
-    M_K32FN(void*, GetStdHandle(u32));
+    K32FN(void*, GetStdHandle(u32));
     void* h = GetStdHandle((u32)-10);
-    if (h == M_INVALID_HANDLE || h == 0){
+    if (h == INVALID_HANDLE || h == 0){
         // todo: diagnostic on stderr
         sys_exit((u32)-10);
     }
     return h;
 }
 
+// TODO
 /*
 __declspec(dllimport) 
 int __stdcall 
@@ -80,6 +143,7 @@ WriteFile(
 );
 */
 
+// TODO
 /*
 u16 mem[U16_MAX + 1];
 u16 get(u16 ptr) { 
@@ -116,6 +180,10 @@ void out(u16 val) {
 }
 */
 
+
+
+// custom entry point
+
 void entry(void) {
     (void) sys_stdin();
     (void) sys_stdout();
@@ -123,6 +191,9 @@ void entry(void) {
     sys_exit(0);
 }
 
+
+
+// TODO
 /*
 enum {
     ABORT   = 0xFFFE,

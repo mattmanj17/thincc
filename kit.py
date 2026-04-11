@@ -1,6 +1,7 @@
 import argparse
 import subprocess
 import sys
+import atexit
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -99,7 +100,13 @@ def test():
     build()
     run_checked([str(EXE)])
 
+def at_exit():
+    OBJ.unlink(missing_ok=True)
+    EXE.unlink(missing_ok=True)
+
 def main():
+    atexit.register(at_exit)
+
     arg1_name = "command"
     arg1_ref = "<" + arg1_name + ">"
 

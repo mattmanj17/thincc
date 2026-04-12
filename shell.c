@@ -1,317 +1,477 @@
 
-// includes
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <windows.h>
 
-// assertions
-#define REQUIRE(x, msg)                         \
-    do {                                        \
-        if (x)                                  \
-            break;                              \
-                                                \
-        fprintf(                                \
-            stderr,                             \
-            "ERROR %s:%d: !(%s)\n",             \
-            __FILE__,                           \
-            __LINE__,                           \
-            #x                                  \
-        );                                      \
-                                                \
-        if (msg) {                              \
-            fprintf(                            \
-                stderr,                         \
-                "This violates a constraint:\n" \
-                "%s\n",                         \
-                msg                             \
-            );                                  \
-        }                                       \
-                                                \
-        exit(EXIT_FAILURE);                     \
-    } while (0)
-#define ASSERT(x) REQUIRE(x, NULL)
+#define CONSTRAINT(predicate, constraint)   \
+do {                                        \
+    if (predicate)                          \
+        break;                              \
+                                            \
+    fprintf(                                \
+        stderr,                             \
+        "FATAL ERROR %s:%d: !(%s)\n",       \
+        __FILE__,                           \
+        __LINE__,                           \
+        #predicate                          \
+    );                                      \
+                                            \
+    if (constraint) {                       \
+        fprintf(                            \
+            stderr,                         \
+            "This violates a constraint:\n" \
+            "%s\n",                         \
+            constraint                      \
+        );                                  \
+    }                                       \
+                                            \
+    exit(EXIT_FAILURE);                     \
+} while (0)
 
-// tag = byte
+#define REQUIRE(predicate) \
+CONSTRAINT(predicate, NULL)
+
 typedef unsigned char Byte;
-#define BYTE_MAX 0xFFu 
-
-// roughly :fgetc from the hex
-Byte ByteReadOrExit(
-    FILE* pFile, 
-    int nExitCodeEOF
+Byte ReadByteOrExitIfEOF(
+    FILE* file, 
+    int exit_eof
 ) {
-    ASSERT(pFile);
-    ASSERT(
-        nExitCodeEOF == EXIT_SUCCESS || 
-        nExitCodeEOF == EXIT_FAILURE
+    REQUIRE(file);
+    REQUIRE(
+        exit_eof == EXIT_SUCCESS || 
+        exit_eof == EXIT_FAILURE
     );
 
-    int c = fgetc(pFile);
+    int c = fgetc(file);
     if (c != EOF) {
-        ASSERT(c >= 0);
-        ASSERT(c <= BYTE_MAX);
+        REQUIRE(c >= 0);
+        REQUIRE(c <= 255);
         return (Byte)c;
     }
     
-    REQUIRE(
-        !ferror(pFile), 
-        "The only fgetc error handled by ByteReadOrExit is EOF."
+    CONSTRAINT(
+        !ferror(file), 
+        "The only fgetc error handled by "
+        "ReadByteOrExitIfEOF is EOF."
     );
 
-    REQUIRE(
-        feof(pFile),
-        "If fgetc(pFile) returns EOF without setting ferror(pFile), "
-        "it must set feof(pFile)."
+    CONSTRAINT(
+        feof(file),
+        "If fgetc(file) returns EOF "
+        "without setting ferror(file), "
+        "it must set feof(file)."
     );
 
-    if (nExitCodeEOF == EXIT_FAILURE) {
+    if (exit_eof == EXIT_FAILURE) {
         fprintf(stderr, "Unexpected EOF!\n");
     }
         
-    exit(nExitCodeEOF);
+    exit(exit_eof);
 }
 
-// roughly :fputc in the hex
-void WriteByteOrAbort(
+Byte ReadByte(FILE* file) {
+    return ReadByteOrExitIfEOF(
+        file, 
+        EXIT_FAILURE
+    );
+}
+
+void WriteByte(
     Byte byte,
-    FILE* pFile
+    FILE* file
 ) {
-    ASSERT(pFile);
+    REQUIRE(file);
 
-    int c = fputc(byte, pFile);
+    int c = fputc(byte, file);
     
-    REQUIRE(
-        (c == EOF) == (ferror(pFile) != 0),
-        "On failure, fputc(ch, pFile) must return EOF, \n"
-        "and set ferror(pFile)"
+    CONSTRAINT(
+        (c == EOF) == (ferror(file) != 0),
+        "On failure, fputc(ch, file) must return EOF,\n"
+        "and set ferror(file)"
     );
 
-    REQUIRE(
-        !ferror(pFile),
-        "WriteByteOrAbort does not handle fputc errors."
+    CONSTRAINT(
+        !ferror(file),
+        "WriteByte does not handle fputc errors."
     );
 
-    REQUIRE(
+    CONSTRAINT(
         c == byte,
         "On success, fputc must return the written character."
     );
 }
 
-// roughly :collect_comment from the hex
-void DropLine(FILE* pFile) {
-    ASSERT(pFile);
+void ReadPastLineBreak(FILE* file) {
+    REQUIRE(file);
     for (;;) {
-        Byte byte = ByteReadOrExit(pFile, EXIT_FAILURE);
+        Byte byte = ReadByte(file);
         if (byte == '\n')
             return;
     }
 }
 
-// roughly :collect_string from the hex
 void ReadString(
-    FILE* pFile, 
-    Byte** ppByteWrite,
-    const Byte* pByteWriteEnd
+    FILE* file, 
+    Byte** cursor,
+    Byte* end
 ) {
-    ASSERT(pFile);
-    ASSERT(ppByteWrite);
-    ASSERT(pByteWriteEnd);
+    REQUIRE(file);
+    REQUIRE(cursor);
+    REQUIRE(end);
     
-    Byte* pByteWrite = *ppByteWrite;
-    ASSERT(pByteWrite);
+    Byte* it = *cursor;
+    REQUIRE(it);
+    REQUIRE(end >= it);
 
     for (;;) {
-        Byte byte = ByteReadOrExit(pFile, EXIT_FAILURE);
+        Byte byte = ReadByte(file);
         if (byte == '"')
             break;
 
-        REQUIRE(
-            pByteWrite < pByteWriteEnd,
+        CONSTRAINT(
+            byte == ' ' ||
+            byte == '\t' ||
+            byte == '\n' ||
+            (byte >= '!' &&
+            byte <= '~'),
+            "ReadString only supports a subset of ascii."
+        );
+
+        CONSTRAINT(
+            it < end,
             "ReadString does not handle buffer exhaustion."
         );
 
-        *pByteWrite = byte;
-        ++pByteWrite;
+        *it = byte;
+        ++it;
     }
 
-    *ppByteWrite = pByteWrite;
+    *cursor = it;
 }
 
-// tag = rspan
-typedef struct SReadSpan
+typedef struct
 {
-    const Byte *    m_pByteBegin;
-    const Byte *    m_pByteEnd;
-} SReadSpan;
+    Byte* begin;
+    Byte* end;
+} Token;
 
-// roughly :collect_token from the hex
-SReadSpan ReadToken(
-    FILE* pFile, 
-    int* pCommandDone
+enum { 
+    token_buffer_size = 1024 * 4,
+
+    // tokens are null terminated
+    max_token_length = token_buffer_size - 1
+};
+Token AllocateAndReadToken(
+    FILE* file,
+    int* command_done
 ) {
-    ASSERT(pFile);
-    ASSERT(pCommandDone);
+    REQUIRE(file);
+    REQUIRE(command_done);
 
-    // surely 4k is enough for anyone... :)
-    enum { cByteTokenBufferSize = 1024 * 4 };
-    Byte* pTokenBuffer = (Byte*)calloc(cByteTokenBufferSize, 1);
-    ASSERT(pTokenBuffer);
+    Byte* token_buffer = (Byte*)calloc(token_buffer_size, 1);
+    REQUIRE(token_buffer);
 
-    // NOTE -1 on pByteWriteEnd so it points to legit mem.
-    //  Put another way, even though we are doing things in
-    //  terms of spans, we want to have at least one 
-    //  null byte at the end, for sanity.
-    Byte* pByteWrite = pTokenBuffer;
-    const Byte* pByteWriteEnd = pTokenBuffer + cByteTokenBufferSize - 1;
+    Byte* it = token_buffer;
+    Byte* end = token_buffer + max_token_length;
 
     for (;;) {
-
-        // NOTE we just exit(EXIT_SUCCESS) if we hit EOF here.
-        Byte byte = ByteReadOrExit(pFile, EXIT_SUCCESS);
+        Byte byte = ReadByteOrExitIfEOF(file, EXIT_SUCCESS);
         
-        // no support for CR or CRLF yet
-        REQUIRE(
+        CONSTRAINT(
             byte != '\r', 
-            "ReadToken does not support carriage returns."
+            "AllocateAndReadToken does not support '\\r'."
         );
 
-        // blanks separate tokens
         if (byte == ' ' || byte == '\t')
             break;
 
-        // skip line breaks (which separate tokens).
-        //  line breaks signal the end of a command.
         if (byte == '\n') {
-            *pCommandDone = 1;
+            *command_done = 1;
             break;
         }
 
-        // strings
-        //  may contain whitespace or be multi line
-        //  does not include the open/close '"'
-        // XXX '""' (the empty string) will be treated as a space...
         if (byte == '"') {
-            ReadString(pFile, &pByteWrite, pByteWriteEnd);
+            ReadString(file, &it, end);
 
-            // XXX this may act strangely with input like
-            // 'foo"bar baz"bing'. I think it would tokenize it as
-            //  'foobar baz' and 'bing'. The 'right' behavior
-            //  in this case is open to interpretation.
-            //
-            // ... maybe this should be 'continue' instead of 'break'
-            break;
+            // tokens may contain strings.
+            // the quotes are not included.
+            continue;
         }
 
-        // comments skip the rest of the line,
-        //  separate tokens,
-        //  and signal the end of a command
-        // NOTE DropLine consumes the line break,
-        //  and aborts the program if it can not find one.
         if (byte == '#') {
-            DropLine(pFile);
-            *pCommandDone = 1;
+            ReadPastLineBreak(file);
+            *command_done = 1;
             break;
         }
 
-        // skip \\\n
-        // NOTE this still separates tokens.
-        //  the point is writing long commands that
-        //  span many lines, not tokens that span many lines
         if (byte == '\\') {
-            byte = ByteReadOrExit(pFile, EXIT_FAILURE);
-            REQUIRE(
+            byte = ReadByte(file);
+            CONSTRAINT(
                 byte == '\n',
                 "'\\n' must follow '\\'."
             );
             break;
         }
 
-        // ran out of space?
-        REQUIRE(
-            pByteWrite < pByteWriteEnd,
-            "ReadToken does not handle buffer exhaustion."
+        CONSTRAINT(
+            byte >= '!' &&
+            byte <= '~',
+            "AllocateAndReadToken only handles printable ascii."
         );
 
-        // default case, extend current token and move on
-        *pByteWrite = byte;
-        ++pByteWrite;
+        CONSTRAINT(
+            it < end,
+            "AllocateAndReadToken does not handle "
+            "buffer exhaustion."
+        );
+
+        *it = byte;
+        ++it;
     }
 
-    // { NULL, NULL } indicates 'no token'
-    SReadSpan rspan;
-    rspan.m_pByteBegin = NULL;
-    rspan.m_pByteEnd = NULL;
-
-    // Nothing read? no token
-    if (pByteWrite == pTokenBuffer) {
-        free(pTokenBuffer);
-        return rspan;
+    // return NULL if token is zero length
+    Token token = { NULL, NULL };
+    if (it == token_buffer) {
+        free(token_buffer);
+        return token;
     }
 
-    // actualy read something, ship it out!
-    rspan.m_pByteBegin = pTokenBuffer;
-    rspan.m_pByteEnd = pByteWrite;
-    return rspan;
+    token.begin = token_buffer;
+    token.end = it;
+    return token;
 }
 
-// roughly :File_Print in the hex
-void PrintRspan(const SReadSpan* pRspan) {
-    if (pRspan == NULL)
-        return;
+void PrintToken(Token token) {
+    Byte* it = token.begin;
+    Byte* end = token.end;
 
-    const Byte * pByteCursor = pRspan->m_pByteBegin;
-    const Byte * pByteEnd = pRspan->m_pByteEnd;
+    REQUIRE(it);
+    REQUIRE(end > it);
 
     for (;;) {
-        if (pByteCursor >= pByteEnd)
+        if (it >= end)
             break;
 
-        WriteByteOrAbort(*pByteCursor, stdout);
-        ++pByteCursor;
+        WriteByte(*it, stdout);
+        ++it;
     }
 }
 
-// helper for Echo
-void PrintRspans(
-    const SReadSpan * pRspanBegin, 
-    const SReadSpan * pRspanEnd,
-    const SReadSpan * pRspanSep
-) {
-    if (!pRspanBegin)
-    {
-        ASSERT(!pRspanEnd);
-        return;
-    }
-    ASSERT(pRspanEnd);
+typedef struct {
+    Token* begin;
+    Token* end;
+} Argv;
 
-    for (
-        const SReadSpan * pRspan = pRspanBegin; 
-        pRspan < pRspanEnd; 
-        ++pRspan
-    ) {        
-        if (pRspanSep && pRspan != pRspanBegin)
-        {
-            PrintRspan(pRspanSep);
-        }
+void EchoArgv(Argv argv) {
+    Token* begin = argv.begin;
+    Token* end = argv.end;
+    
+    REQUIRE(begin);
+    REQUIRE(end > begin);
+
+    WriteByte(' ', stdout);
+    WriteByte('#', stdout);
+    WriteByte(' ', stdout);
+
+    for (Token* it = begin; it < end; ++it) {
+        PrintToken(*it);
+        WriteByte(' ', stdout);
+    }
+
+    WriteByte('\n', stdout);
+}
+
+void CopyToken(
+    Token token, 
+    char** cursor
+) {
+    char* it = *cursor;
+    for (;;) {
+        if (token.begin >= token.end)
+            break;
+
+        char ch = (char)*token.begin;
+
+        REQUIRE(ch != '\\');
+        REQUIRE(ch != '"');
+
+        *it = ch;
         
-        PrintRspan(pRspan);
+        ++token.begin;
+        ++it;
+    }
+    *cursor = it;
+}
+
+enum { max_argument_count = 256 };
+char* AllocateCommand(Argv argv) {
+    Token* begin = argv.begin;
+    Token* end = argv.end;
+
+    REQUIRE(begin);
+    REQUIRE(end > begin);
+
+    enum { 
+        // +3 for the quotes and space
+        max_argument_length = max_token_length + 3,
+
+        max_command_length = (
+            max_argument_count * max_argument_length
+        ),
+    };
+
+    size_t command_length = 0;
+    for (Token* it = begin; it < end; ++it) {
+        REQUIRE(it->begin);
+        REQUIRE(it->end > it->begin);
+
+        ptrdiff_t token_length = it->end - it->begin;
+        REQUIRE(token_length > 0);
+        REQUIRE(token_length <= max_token_length);
+        
+        size_t arg_length = (size_t)token_length + 3;
+        REQUIRE(
+            command_length <= (max_command_length - arg_length)
+        );
+        
+        command_length += arg_length;
+        
+        REQUIRE(command_length <= max_command_length);
+    }
+
+    // command is null terminated
+    char* command = calloc(command_length + 1, 1);
+    REQUIRE(command);
+
+    char* it = command;
+    for (Token* token = begin; token < end; ++token) {
+        // leading '"'
+        *it = '"';
+        ++it;
+
+        // token
+        CopyToken(*token, &it);
+
+        // trailing '" '
+        it[0] = '"';
+        it[1] = ' ';
+        it += 2;
+    }
+
+    REQUIRE(it > command);
+    REQUIRE((size_t)(it - command) == command_length);
+
+    return command;
+}
+
+void RunChildProcess(
+    Token arg0,
+    char* command
+) {
+    REQUIRE(arg0.begin);
+    REQUIRE(command);
+
+    PROCESS_INFORMATION pi = {0};
+    STARTUPINFOA si = {0};
+    {
+        si.cb = sizeof(si);
+        
+        si.dwFlags |= STARTF_USESTDHANDLES;
+        
+        si.hStdInput  = GetStdHandle(STD_INPUT_HANDLE);
+        REQUIRE(si.hStdInput);
+        REQUIRE(si.hStdInput != INVALID_HANDLE_VALUE);
+        
+        si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+        REQUIRE(si.hStdOutput);
+        REQUIRE(si.hStdOutput != INVALID_HANDLE_VALUE);
+        
+        si.hStdError  = GetStdHandle(STD_ERROR_HANDLE);
+        REQUIRE(si.hStdError);
+        REQUIRE(si.hStdError != INVALID_HANDLE_VALUE);
+    }
+    
+    char * exe = (char *)arg0.begin;
+    REQUIRE(
+        CreateProcessA(
+            exe,        // lpApplicationName
+            command,    // lpCommandLine
+            NULL,       // lpProcessAttributes
+            NULL,       // lpThreadAttributes
+            TRUE,       // bInheritHandles
+            0,          // dwCreationFlags
+            NULL,       // lpEnvironment
+            NULL,       // lpCurrentDirectory
+            &si,        // lpStartupInfo
+            &pi         // lpProcessInformation
+        )
+    );
+    
+    REQUIRE(
+        WaitForSingleObject(pi.hProcess, INFINITE)  
+        == WAIT_OBJECT_0
+    );
+    
+    DWORD rc = 0;
+    REQUIRE(GetExitCodeProcess(pi.hProcess, &rc));
+    
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    REQUIRE(rc == 0);
+}
+
+void RunNextCommand(FILE* file) {
+    REQUIRE(file);
+
+    // length of arguments is max_argument_count + 1.
+    // this makes tokens[max_argument_count] a valid address.
+    // this prevents confusing semantics if argv.end
+    // points to exactly arguments[max_argument_count]
+    Token arguments[max_argument_count + 1] = {0};
+
+    size_t argument_count = 0;
+    int command_done = 0;
+    while (!command_done) {
+        Token token = AllocateAndReadToken(
+            file, 
+            &command_done
+        );
+        if (token.begin) {
+            REQUIRE(argument_count < max_argument_count);
+            arguments[argument_count] = token;
+            ++argument_count;
+        }
+    }
+
+    if (argument_count == 0)
+        return;
+
+    Argv argv;
+    argv.begin = &arguments[0];
+    argv.end = &arguments[argument_count];
+
+    EchoArgv(argv);
+
+    char* command = AllocateCommand(argv);
+    RunChildProcess(*argv.begin, command);
+    free(command);
+
+    for (Token* it = argv.begin; it < argv.end; ++it) {
+        free(it->begin);
     }
 }
 
-// roughly :print_command from the hex
-void Echo(
-    const SReadSpan * pRspanBegin, 
-    const SReadSpan * pRspanEnd
-) {
-    WriteByteOrAbort(' ', stdout);
-    WriteByteOrAbort('#', stdout);
-    WriteByteOrAbort(' ', stdout);
+int main(int argc, char** argv) {
+    REQUIRE(argc == 2);
+    REQUIRE(argv);
+    REQUIRE(argv[0]);
+    REQUIRE(argv[1]);
 
-    Byte space[] = " ";
-    SReadSpan rspanSpace;
-    rspanSpace.m_pByteBegin = space;
-    rspanSpace.m_pByteEnd = space + 1;
+    FILE* file = fopen(argv[1], "rb");
+    REQUIRE(file);
 
-    PrintRspans(pRspanBegin, pRspanEnd, &rspanSpace);
-
-    WriteByteOrAbort('\n', stdout);
+    for (;;) {
+        RunNextCommand(file);
+    }
 }

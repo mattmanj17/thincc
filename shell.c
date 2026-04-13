@@ -365,6 +365,47 @@ char* AllocateCommand(Argv argv) {
     return command;
 }
 
+void WindowsErrorExit() {
+    DWORD last_error = GetLastError();
+    fprintf(
+        stderr, 
+        "windows system error: %lu\n", 
+        last_error
+    );
+
+    char* msg = NULL;
+    DWORD dwFlags = 0;
+    {
+        dwFlags |= FORMAT_MESSAGE_ALLOCATE_BUFFER;
+        dwFlags |= FORMAT_MESSAGE_FROM_SYSTEM;
+        dwFlags |= FORMAT_MESSAGE_IGNORE_INSERTS;
+    }
+    DWORD dwLanguageId = MAKELANGID(
+        LANG_NEUTRAL,
+        SUBLANG_DEFAULT
+    );
+    DWORD ok = FormatMessageA(
+        dwFlags,        // dwFlags
+        NULL,           // lpSource
+        last_error,     // dwMessageId
+        dwLanguageId,   // dwLanguageId
+        &msg,           // lpBuffer
+        0,              // nSize
+        NULL            // Arguments
+    );
+
+    if (ok) {
+        fprintf(
+            stderr, 
+            "%s\n", 
+            msg
+        );
+    }
+
+    LocalFree(msg);
+    ExitProcess(EXIT_FAILURE); 
+}
+
 void RunChildProcess(
     Token arg0,
     char* command
@@ -393,20 +434,21 @@ void RunChildProcess(
     }
     
     char * exe = (char *)arg0.begin;
-    REQUIRE(
-        CreateProcessA(
-            exe,        // lpApplicationName
-            command,    // lpCommandLine
-            NULL,       // lpProcessAttributes
-            NULL,       // lpThreadAttributes
-            TRUE,       // bInheritHandles
-            0,          // dwCreationFlags
-            NULL,       // lpEnvironment
-            NULL,       // lpCurrentDirectory
-            &si,        // lpStartupInfo
-            &pi         // lpProcessInformation
-        )
+    BOOL ok = CreateProcessA(
+        exe,        // lpApplicationName
+        command,    // lpCommandLine
+        NULL,       // lpProcessAttributes
+        NULL,       // lpThreadAttributes
+        TRUE,       // bInheritHandles
+        0,          // dwCreationFlags
+        NULL,       // lpEnvironment
+        NULL,       // lpCurrentDirectory
+        &si,        // lpStartupInfo
+        &pi         // lpProcessInformation
     );
+    if (!ok) {
+        WindowsErrorExit();
+    }
     
     REQUIRE(
         WaitForSingleObject(pi.hProcess, INFINITE)  
@@ -463,12 +505,22 @@ void RunNextCommand(FILE* file) {
 }
 
 int main(int argc, char** argv) {
-    REQUIRE(argc == 2);
+    REQUIRE(argc > 0);
     REQUIRE(argv);
     REQUIRE(argv[0]);
-    REQUIRE(argv[1]);
 
-    FILE* file = fopen(argv[1], "rb");
+    FILE* file = NULL;
+    if (argc == 1)
+    {
+        file = stdin;
+    }
+    else
+    {
+        REQUIRE(argc == 2);
+        REQUIRE(argv[1]);
+        file = fopen(argv[1], "rb");
+    }
+
     REQUIRE(file);
 
     for (;;) {

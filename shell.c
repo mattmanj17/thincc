@@ -389,7 +389,7 @@ void WindowsErrorExit() {
         NULL,           // lpSource
         last_error,     // dwMessageId
         dwLanguageId,   // dwLanguageId
-        &msg,           // lpBuffer
+        (char*)&msg,    // lpBuffer
         0,              // nSize
         NULL            // Arguments
     );
@@ -402,7 +402,6 @@ void WindowsErrorExit() {
         );
     }
 
-    LocalFree(msg);
     ExitProcess(EXIT_FAILURE); 
 }
 
